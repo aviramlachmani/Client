@@ -97,7 +97,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
     char ch;
     char commend[2];
     try {
-        for(int i=0;i<2;+i) {
+        for(int i=0;i<2;i++) {
             if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
@@ -111,7 +111,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         if(result==13) frame.append("ERROR "); ///convert the short to string
               else return false;
 
-        for(int i=0;i<2;+i) {
+        for(int i=0;i<2;i++) {
             if (!getBytes(&ch, 1)) ////read the message opcode
             {
                 return false;
