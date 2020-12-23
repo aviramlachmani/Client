@@ -1,3 +1,0 @@
-/Users/lachmani/CLionProjects/SPL_Assignment1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/Users/lachmani/CLionProjects/SPL_Assignment1/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/lachmani/CLionProjects/SPL_Assignment1/cmake-build-debug/CMakeFiles/SPL_Assignment1.dir
