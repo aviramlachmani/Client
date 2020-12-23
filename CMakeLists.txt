@@ -5,9 +5,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(PROJECT_HEADERS
         include/connectionHandler.h
+        include/BGRSconnectionHandler.h
         )
 set(PROJECT_SOURCES
         src/connectionHandler.cpp
+        src/BGRSconnectionHandler.cpp
         src/echoClient.cpp
         )
 
