@@ -49,7 +49,14 @@ public:
     // Close down the connection properly.
     void close();
 
-}; //class ConnectionHandler
+    bool makeKedmCheckMassage(std::string &basicString, char delimiter);
+
+    bool makeIsRegistered(std::string &basicString, char delimiter);
+
+    bool makeStudentStat(std::string &basicString, char delimiter);
+
+    bool makeCourseStat(std::string &basicString, char delimiter);
+};
 
 #endif
 

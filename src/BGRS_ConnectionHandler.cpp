@@ -1,5 +1,4 @@
-
-#include "../include/BGRS_ConnectionHandler.h"
+#include <BGRS_ConnectionHandler.h>
 
 using boost::asio::ip::tcp;
 
@@ -122,18 +121,13 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         result1 += (short)(commend[1] & 0xff);
         frame.append(std::to_string(result1)+" ");
 
-        if(result1==6);              ///todo there are problem with the answer of the server
-        if(result1==7);              ///todo there are problem with the answer of the server
-        if(result1==8);              ///todo there are problem with the answer of the server
 
-        do{
-            if(!getBytes(&ch, 1))
-            {
-                return false;
-            }
-            if(ch!='\0')
-                frame.append(1, ch);
-        }while (delimiter != ch);
+        if(result1==6) return makeKedmCheckMassage(frame,delimiter);
+        if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
+        if(result1==8) return makeStudentStat(frame,delimiter);
+        if(result1==9) return makeIsRegistered(frame,delimiter);
+
+
     } catch (std::exception& e) {
         std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
         return false;
@@ -159,5 +153,132 @@ void BGRS_ConnectionHandler::close() {
     } catch (...) {
         std::cout << "closing failed: connection already closed" << std::endl;
     }
+}
+
+bool BGRS_ConnectionHandler::makeKedmCheckMassage(string &frame, char delimiter) {
+    frame=frame+"\n[";
+    char courseNum[2];
+    try {
+    do{
+        for(int i=0;i<2;i++) {
+            if (!getBytes(&courseNum[i], 1)) {
+                return false;
+            }
+            if (courseNum[i] == delimiter){
+                frame=frame+"]";
+                return true;
+            };
+        }
+        short result1 = (short)((courseNum[0] & 0xff) << 8); ///convert to courseNum to short
+        result1 += (short)(courseNum[1] & 0xff);
+        frame.append(std::to_string(result1)+",");
+        }while (1);
+      } catch (std::exception& e) {
+    std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
+    return false;
+    }
+}
+
+bool BGRS_ConnectionHandler::makeIsRegistered(string &frame, char delimiter) {
+    frame=frame+"\n";
+    char ch;
+    try {
+        do{
+            if(!getBytes(&ch, 1))
+            {
+                return false;
+            }
+            if(ch!='\0')
+                frame.append(1, ch);
+        }while (delimiter != ch);
+    } catch (std::exception& e) {
+        std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool BGRS_ConnectionHandler::makeStudentStat(string &frame, char delimiter) {
+    frame=frame+"\nStudent: ";
+    char ch;
+    try {
+        do{
+            if(!getBytes(&ch, 1))
+            {
+                return false;
+            }
+            if(ch!='\0')frame.append(1, ch);
+            else {
+                frame=frame+"\nCourses: ";
+                return makeKedmCheckMassage(frame,delimiter);
+            }
+        }while (delimiter != ch);
+
+    } catch (std::exception& e) {
+        std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
+        return false;
+    }
+    return true;
+}
+
+bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
+    frame=frame+"\nCourse: ";
+    char courseNum[2];
+    char ch;
+    try {
+        for (int i = 0; i < 2; i++) {
+            if (!getBytes(&courseNum[i], 1)) {
+                return false;
+            }
+            if (courseNum[i] == delimiter) {
+                frame = frame + "]";
+                return true;
+            };
+        }
+        short result1 = (short) ((courseNum[0] & 0xff) << 8); ///convert to courseNum to short
+        result1 += (short) (courseNum[1] & 0xff);
+        frame.append("("+std::to_string(result1) + ")");
+
+        do{
+            if(!getBytes(&ch, 1))
+            {
+                return false;
+            }
+            if(ch!='\0')frame.append(1, ch);
+        }while (ch!='\0');
+        frame=frame+"\nSeats Available: ";
+
+        for (int i = 0; i < 2; i++) {                ///read the seats that available
+            if (!getBytes(&courseNum[i], 1)) return false;}
+
+        short result2 = (short) ((courseNum[0] & 0xff) << 8); ///convert to courseNum to short
+        result2 += (short) (courseNum[1] & 0xff);
+        frame.append(std::to_string(result2)+'/');
+
+        for (int i = 0; i < 2; i++) {                ///read the seats that available
+            if (!getBytes(&courseNum[i], 1)) return false;}
+
+        short result3 = (short) ((courseNum[0] & 0xff) << 8); ///convert to courseNum to short
+        result3 += (short) (courseNum[1] & 0xff);
+        frame.append(std::to_string(result3)+"\n[");
+
+        do{
+            if(!getBytes(&ch, 1))
+                {
+                    return false;
+                }
+                if(ch!='\0')frame.append(1, ch);
+                else {
+                    frame=frame+",";
+                    return makeKedmCheckMassage(frame,delimiter);
+                }
+            }while (delimiter != ch);
+            frame=frame.substr(0,frame.length()-1);
+            frame=frame+"]";
+
+        } catch (std::exception& e) {
+    std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
+    return false;}
+    return true;
 }
 
