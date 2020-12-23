@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <connectionHandler.h>
+#include <BGRS_ConnectionHandler.h>
 
 /**
 * This code assumes that the server replies the exact text the client sent it (as opposed to the practical session example)
@@ -11,7 +12,7 @@ int main (int argc, char *argv[]) {
     }
     std::string host = argv[1];
     short port = atoi(argv[2]);
-    
+    BGRS_ConnectionHandler connectionHandler1(host,port);
     ConnectionHandler connectionHandler(host, port);
     if (!connectionHandler.connect()) {
         std::cerr << "Cannot connect to " << host << ":" << port << std::endl;
