@@ -27,16 +27,16 @@ int main (int argc, char *argv[]) {
 
         int len=line.length();
         if (!connectionHandler.sendLine(line)) {
-            std::cout << "Disconnected. Exiting...\n" << std::endl;
+            std::cout << "trying to send...fail..Disconnected. Exiting...\n" << std::endl;
             break;
         }
 
 
-        std::string answer;
+        std::string answer="";
         // Get back an answer: by using the expected number of bytes (len bytes + newline delimiter)
         // We could also use: connectionHandler.getline(answer) and then get the answer without the newline char at the end
         if (!connectionHandler.getLine(answer)) {
-            std::cout << "Disconnected. Exiting...\n" << std::endl;
+            std::cout << "trying to get...fail..Disconnected. Exiting...\n" << std::endl;
             break;
         }
 
