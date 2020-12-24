@@ -91,7 +91,7 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
     if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'\n');
     if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n');
     if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'\n');
-    if(commend=="MYCOURSE") return sendFrameAscii(11,rest,'\n');
+    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'\n');
     else std::cerr << "Error: illegal commend please write again" << std::endl;
     return false;
 }
@@ -126,10 +126,11 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         int result1=std::stoi(num);
         frame.append(num);
 
-        if(result1==6) return makeKedmCheckMassage(frame,delimiter);
+        if(result1==6) return makeKedmCheckMassage(frame,delimiter,true);
         if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
         if(result1==8) return makeStudentStat(frame,delimiter);
         if(result1==9) return makeIsRegistered(frame,delimiter);
+        if(result1==11) return makeKedmCheckMassage(frame,delimiter,true);
 
         if (!getBytes(&ch, 1)) /// read the last baye '\n'
         {return false;}
@@ -144,6 +145,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
 
 bool BGRS_ConnectionHandler::sendFrameAscii(short commend,const std::string& frame, char delimiter) {
     string string1=std::to_string(commend);
+    string1=string1+" ";
     bool result1=sendBytes(string1.c_str(),string1.length());
     bool result=sendBytes(frame.c_str(),frame.length());
     if(!result || !result1) return false;
@@ -159,22 +161,28 @@ void BGRS_ConnectionHandler::close() {
     }
 }
 
-bool BGRS_ConnectionHandler::makeKedmCheckMassage(string &frame, char delimiter) {
-    frame=frame+"\n[";
+bool BGRS_ConnectionHandler::makeKedmCheckMassage(string &frame, char delimiter,bool a) {
+    if(a)frame=frame+"\n[";
+    bool ans=false;
     char ch;
     try {
         do{if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
             }
-            frame.append(1, ch);
-          if(ch=='\0') frame.append(",");
+            if(ch!=' ')  frame.append(1, ch);
+             else { ans=true;
+                 frame.append(",");
+             }
         }while (ch!=delimiter);
-        frame=frame+"]";
+       if(ans) frame.resize(frame.length()-2);
+       else frame.resize(frame.length()-1);
+        frame=frame+"] ";
       } catch (std::exception& e) {
     std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
     return false;
     }
+    return true;
 }
 
 bool BGRS_ConnectionHandler::makeIsRegistered(string &frame, char delimiter) {
@@ -205,10 +213,10 @@ bool BGRS_ConnectionHandler::makeStudentStat(string &frame, char delimiter) {
             {
                 return false;
             }
-            if(ch!='\0')frame.append(1, ch);
+            if(ch!=' ')frame.append(1, ch);
             else {
-                frame=frame+"\nCourses: ";
-                return makeKedmCheckMassage(frame,delimiter);
+                frame=frame+"\nCourses: [";
+                return makeKedmCheckMassage(frame,delimiter, false);
             }
         }while (delimiter != ch);
 
@@ -227,8 +235,8 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
             if (!getBytes(&ch, 1)) {/// read the number of course
                 return false;
             }
-            frame.append(1,ch);
-        }while (ch!='\0');
+           if(ch!=' ') frame.append(1,ch);
+        }while (ch!=' ');
         frame=frame+") ";
         do{
             if (!getBytes(&ch, 1)) {/// read the name of course
@@ -237,36 +245,42 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
             frame.append(1,ch);
         }while (ch!='\0');
         frame=frame+"\nSeats Available: ";
+        for(int i=0;i<2;i++){
         do{
             if (!getBytes(&ch, 1)) {/// read the Current seats that taken of course
                 return false;
             }
-            frame.append(1,ch);
-        }while (ch!='\0');
+            if(ch!=' ') frame.append(1,ch);
+        }while (ch!=' ');
+        }
         frame=frame+"/";
         do{
             if (!getBytes(&ch, 1)) {/// read the Max seats of course
                 return false;
             }
             frame.append(1,ch);
-        }while (ch!='\0');
-        frame=frame+"\nStudent Registerd: ";
+        }while (ch!=' ');
+        bool ans=false;
+        frame=frame+"\nStudent Registered: [";
         do{
             if(!getBytes(&ch, 1))
                 {
                     return false;
                 }
-                if(ch!='\0')frame.append(1, ch);
+                if(ch!=' ')frame.append(1, ch);
                 else {
                     frame=frame+",";
+                    ans=true;
                 }
             }while (delimiter != ch);
-            frame=frame.substr(0,frame.length()-1);
-            frame=frame+"]";
+           if(ans) frame=frame.substr(0,frame.length()-2);
+           else frame=frame.substr(0,frame.length()-1);
+            frame=frame+"] ";
 
         } catch (std::exception& e) {
     std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
     return false;}
     return true;
 }
+
 

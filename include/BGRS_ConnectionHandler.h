@@ -49,13 +49,15 @@ public:
     // Close down the connection properly.
     void close();
 
-    bool makeKedmCheckMassage(std::string &basicString, char delimiter);
+    bool makeKedmCheckMassage(std::string &basicString, char delimiter,bool a);
 
     bool makeIsRegistered(std::string &basicString, char delimiter);
 
     bool makeStudentStat(std::string &basicString, char delimiter);
 
     bool makeCourseStat(std::string &basicString, char delimiter);
+
+    bool makeMyCourse(std::string &basicString, char delimiter);
 };
 
 #endif
