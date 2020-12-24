@@ -20,6 +20,8 @@ int main (int argc, char *argv[]) {
 
     //From here we will see the rest of the ehco client implementation:
     while (1) {
+        bool canSend=true;
+        bool ans=true;
         const short bufsize = 1024;
         char buf[bufsize];
         std::cin.getline(buf, bufsize);
@@ -27,29 +29,30 @@ int main (int argc, char *argv[]) {
 
         int len=line.length();
         if (!connectionHandler.sendLine(line)) {
-            std::cout << "trying to send...fail..Disconnected. Exiting...\n" << std::endl;
-            break;
+            std::cout << "trying to send...fail..write again the commend\n" << std::endl;
+            canSend=false;
         }
-
 
         std::string answer="";
         // Get back an answer: by using the expected number of bytes (len bytes + newline delimiter)
         // We could also use: connectionHandler.getline(answer) and then get the answer without the newline char at the end
-        if (!connectionHandler.getLine(answer)) {
-            std::cout << "trying to get...fail..Disconnected. Exiting...\n" << std::endl;
-            break;
+        if (canSend && !connectionHandler.getLine(answer)) {
+            std::cout << "trying to get...fail..write again the commend\n" << std::endl;
+            ans= false;
         }
+        if(ans){
 
-        len=answer.length();
-        // A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
-        // we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
-        answer.resize(len-1);
+          len=answer.length();
+           // A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
+           // we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
+           answer.resize(len-1);
 
         std::cout << answer << std::endl;
-        if (answer == "ACK 4") {
+        if (answer.compare( "ACK 4")==0) {
             std::cout << "Exiting...\n" << std::endl;
             break;
         }
+     }
     }
     return 0;
 }

@@ -76,6 +76,10 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
             rest=line.substr(i+1);
             break;
         }
+        if(i==line.length()-1){
+            commend=line.substr(0,i);
+            rest="";
+        }
     }
     if(commend=="ADMINREG") return sendFrameAscii(1,rest,'\n');
     if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'\n');
@@ -85,29 +89,26 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
     if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'\n');
     if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'\n');
     if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'\n');
-    if(commend=="ISREGISETERD") return sendFrameAscii(9,rest,'\n');
-    if(commend=="UNREGISTERD") return sendFrameAscii(10,rest,'\n');
+    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n');
+    if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'\n');
     if(commend=="MYCOURSE") return sendFrameAscii(11,rest,'\n');
-    else std::cerr << "recv failed (Error: illegal commend )" << std::endl;
+    else std::cerr << "Error: illegal commend please write again" << std::endl;
     return false;
 }
 
 bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
     char ch;
-    char commend[2];
+    string str;
+    string num;
     try {
-        for(int i=0;i<2;i++) {
+       do{
             if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
             }
-            commend[i]=ch;
-        }
-        int result = int((unsigned char)(0) << 24 |  ///convert the commend to int
-                    (unsigned char)(0) << 16 |
-                    (unsigned char)(commend[0]) << 8 |
-                    (unsigned char)(commend[1]));
-
+           str.append(1, ch);
+        }while (ch!=32);
+        int result = std::stoi(str);//convert the commend to int
 
         if(result==12) frame.append("ACK "); ///convert the short to string
         else if(result==13) frame.append("ERROR "); ///convert the short to string
@@ -115,20 +116,15 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
             return false;
         }
 
-        for(int i=0;i<2;i++) {
-            if (!getBytes(&ch, 1)) ////read the message opcode
+        do{
+            if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
             }
-            commend[i]=ch;
-        }
-        int result1 = int((unsigned char)(0) << 24 |  ///convert the commend to int
-                         (unsigned char)(0) << 16 |
-                         (unsigned char)(commend[0]) << 8 |
-                         (unsigned char)(commend[1]));
-        frame.append(std::to_string(result1)+" ");
-
-
+            num.append(1, ch);
+        }while (ch!=32);
+        int result1=std::stoi(num);
+        frame.append(num);
 
         if(result1==6) return makeKedmCheckMassage(frame,delimiter);
         if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
@@ -136,10 +132,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         if(result1==9) return makeIsRegistered(frame,delimiter);
 
         if (!getBytes(&ch, 1)) /// read the last baye '\n'
-        {
-            return false;
-        }
-
+        {return false;}
 
     } catch (std::exception& e) {
         std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
@@ -150,10 +143,8 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
 
 
 bool BGRS_ConnectionHandler::sendFrameAscii(short commend,const std::string& frame, char delimiter) {
-    char commendByte[2];
-    commendByte[0] = ((commend >> 8) & 0xFF);
-    commendByte[1] = (commend & 0xFF);
-    bool result1=sendBytes(commendByte,2);
+    string string1=std::to_string(commend);
+    bool result1=sendBytes(string1.c_str(),string1.length());
     bool result=sendBytes(frame.c_str(),frame.length());
     if(!result || !result1) return false;
     return sendBytes(&delimiter,1);
@@ -171,28 +162,15 @@ void BGRS_ConnectionHandler::close() {
 bool BGRS_ConnectionHandler::makeKedmCheckMassage(string &frame, char delimiter) {
     frame=frame+"\n[";
     char ch;
-    char courseNum[2];
     try {
-    do{
-        for(int i=0;i<2;i++) {
-            if (!getBytes(&courseNum[i], 1)) {
+        do{if (!getBytes(&ch, 1)) ////read the commend
+            {
                 return false;
             }
-            if (courseNum[i] == delimiter){
-                frame=frame+"]";
-                return true;
-            };
-        }
-        int result1 = int((unsigned char)(0) << 24 |  ///convert the commend to int
-                         (unsigned char)(0) << 16 |
-                         (unsigned char)(courseNum[0]) << 8 |
-                         (unsigned char)(courseNum[1]));
-        frame.append(std::to_string(result1)+",");
-
-        if (!getBytes(&ch, 1)) {  /// read the '\n'
-            return false;
-        }
-        }while (1);
+            frame.append(1, ch);
+          if(ch=='\0') frame.append(",");
+        }while (ch!=delimiter);
+        frame=frame+"]";
       } catch (std::exception& e) {
     std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
     return false;
@@ -242,50 +220,37 @@ bool BGRS_ConnectionHandler::makeStudentStat(string &frame, char delimiter) {
 }
 
 bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
-    frame=frame+"\nCourse: ";
-    char courseNum[2];
+    frame=frame+"\nCourse: (";
     char ch;
     try {
-        for (int i = 0; i < 2; i++) {
-            if (!getBytes(&courseNum[i], 1)) {
-                return false;
-            }
-            if (courseNum[i] == delimiter) {
-                frame = frame + "]";
-                return true;
-            };
-        }
-        int result1 = int((unsigned char)(0) << 24 |  ///convert the commend to int
-                          (unsigned char)(0) << 16 |
-                          (unsigned char)(courseNum[0]) << 8 |
-                          (unsigned char)(courseNum[1]));
-        frame.append("("+std::to_string(result1) + ")");
-
         do{
-            if(!getBytes(&ch, 1))
-            {
+            if (!getBytes(&ch, 1)) {/// read the number of course
                 return false;
             }
-            if(ch!='\0')frame.append(1, ch);
+            frame.append(1,ch);
+        }while (ch!='\0');
+        frame=frame+") ";
+        do{
+            if (!getBytes(&ch, 1)) {/// read the name of course
+                return false;
+            }
+            frame.append(1,ch);
         }while (ch!='\0');
         frame=frame+"\nSeats Available: ";
-
-        for (int i = 0; i < 2; i++) {                ///read the seats that available
-            if (!getBytes(&courseNum[i], 1)) return false;}
-
-        int result2 = int((unsigned char)(0) << 24 |  ///convert the commend to int
-                          (unsigned char)(0) << 16 |
-                          (unsigned char)(courseNum[0]) << 8 |
-                          (unsigned char)(courseNum[1]));
-        frame.append(std::to_string(result2)+'/');
-
-        for (int i = 0; i < 2; i++) {                ///read the seats that available
-            if (!getBytes(&courseNum[i], 1)) return false;}
-
-        short result3 = (short) ((courseNum[0] & 0xff) << 8); ///convert to courseNum to short
-        result3 += (short) (courseNum[1] & 0xff);
-        frame.append(std::to_string(result3)+"\n[");
-
+        do{
+            if (!getBytes(&ch, 1)) {/// read the Current seats that taken of course
+                return false;
+            }
+            frame.append(1,ch);
+        }while (ch!='\0');
+        frame=frame+"/";
+        do{
+            if (!getBytes(&ch, 1)) {/// read the Max seats of course
+                return false;
+            }
+            frame.append(1,ch);
+        }while (ch!='\0');
+        frame=frame+"\nStudent Registerd: ";
         do{
             if(!getBytes(&ch, 1))
                 {
@@ -294,7 +259,6 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
                 if(ch!='\0')frame.append(1, ch);
                 else {
                     frame=frame+",";
-                    return makeKedmCheckMassage(frame,delimiter);
                 }
             }while (delimiter != ch);
             frame=frame.substr(0,frame.length()-1);
