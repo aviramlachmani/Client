@@ -76,10 +76,10 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
             rest=line.substr(i+1);
             break;
         }
-        if(i==line.length()-1){
-            commend=line.substr(0,i);
-            rest="";
-        }
+    }
+    if(commend.empty()){
+        commend=line;
+        rest="";
     }
     if(commend=="ADMINREG") return sendFrameAscii(1,rest,'\n');
     if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'\n');
