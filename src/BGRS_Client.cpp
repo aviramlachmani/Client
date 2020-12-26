@@ -24,6 +24,7 @@ int main (int argc, char *argv[]) {
         bool ans=true;
         const short bufsize = 1024;
         char buf[bufsize];
+        std::cout<<"Client>" <<std::flush;
         std::cin.getline(buf, bufsize);
         std::string line(buf);
 
@@ -47,7 +48,7 @@ int main (int argc, char *argv[]) {
            // we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
            answer.resize(len-1);
 
-        std::cout << answer << std::endl;
+        std::cout << "Client<"+answer << std::endl;
         if (answer.compare( "ACK 4")==0) {
             std::cout << "Exiting...\n" << std::endl;
             break;

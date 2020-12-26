@@ -92,8 +92,7 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
     if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n');
     if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'\n');
     if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'\n');
-    else std::cerr << "Error: illegal commend please write again" << std::endl;
-    return false;
+    else  return sendFrameAscii(13,rest,'\n');
 }
 
 bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
