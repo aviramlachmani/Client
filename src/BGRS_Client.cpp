@@ -18,10 +18,7 @@ int main (int argc, char *argv[]) {
         return 1;
     }
 
-    //From here we will see the rest of the ehco client implementation:
     while (1) {
-        bool canSend=true;
-        bool ans=true;
         const short bufsize = 1024;
         char buf[bufsize];
         std::cout<<"Client>" <<std::flush;
@@ -31,17 +28,14 @@ int main (int argc, char *argv[]) {
         int len=line.length();
         if (!connectionHandler.sendLine(line)) {
             std::cout << "trying to send...fail..write again the commend\n" << std::endl;
-            canSend=false;
         }
 
         std::string answer="";
         // Get back an answer: by using the expected number of bytes (len bytes + newline delimiter)
         // We could also use: connectionHandler.getline(answer) and then get the answer without the newline char at the end
-        if (canSend && !connectionHandler.getLine(answer)) {
+        if (!connectionHandler.getLine(answer)) {
             std::cout << "trying to get...fail..write again the commend\n" << std::endl;
-            ans= false;
         }
-        if(ans){
 
           len=answer.length();
            // A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
@@ -54,6 +48,6 @@ int main (int argc, char *argv[]) {
             break;
         }
      }
-    }
+
     return 0;
 }
