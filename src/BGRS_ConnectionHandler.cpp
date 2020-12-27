@@ -81,49 +81,48 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
         commend=line;
         rest="";
     }
-    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'\n');
-    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'\n');
-    if(commend=="LOGIN") return sendFrameAscii(3,rest,'\n');
-    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'\n');
-    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'\n');
-    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'\n');
-    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'\n');
-    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'\n');
-    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n');
-    if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'\n');
-    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'\n');
-    else  return sendFrameAscii(13,rest,'\n');
+    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'\n', false);
+    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'\n', false);
+    if(commend=="LOGIN") return sendFrameAscii(3,rest,'\n', false);
+    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'\n', false);
+    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'\n',true);
+    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'\n',true);
+    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'\n',true);
+    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'\n', false);
+    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n',true);
+    if(commend=="UNREGISTER") return sendFrameAscii(15,rest,'\n',true); ///we cant send 10 because it is '\n' in asci
+    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'\n', false);
+    else  return sendFrameAscii(13,rest,'\n', false);
 }
 
 bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
     char ch;
+    char com[2];
     string str;
     string num;
     try {
-       do{
+       for(int i=0;i<2;i++){
             if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
             }
-           str.append(1, ch);
-        }while (ch!=32);
-        int result = std::stoi(str);//convert the commend to int
-
+           com[i]=ch;
+        }
+        short result = bytesToShort(com);
         if(result==12) frame.append("ACK "); ///convert the short to string
         else if(result==13) frame.append("ERROR "); ///convert the short to string
-        else {
-            return false;
-        }
+        else {return false;}
 
-        do{
+        for(int i=0;i<2;i++){
             if (!getBytes(&ch, 1)) ////read the commend
             {
                 return false;
             }
-            num.append(1, ch);
-        }while (ch!=32);
-        int result1=std::stoi(num);
-        frame.append(num);
+            com[i]=ch;
+        }
+        short result1=bytesToShort(com);
+        if(result1==15) frame.append("10 ");
+        else frame.append(std::to_string(result1)+" ");
 
         if(result1==6) return makeKedmCheckMassage(frame,delimiter,true);
         if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
@@ -142,11 +141,22 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
 }
 
 
-bool BGRS_ConnectionHandler::sendFrameAscii(short commend,const std::string& frame, char delimiter) {
+bool BGRS_ConnectionHandler::sendFrameAscii(short commend, std::string& frame, char delimiter,bool ans) {
     string string1=std::to_string(commend);
-    string1=string1+" ";
-    bool result1=sendBytes(string1.c_str(),string1.length());
-    bool result=sendBytes(frame.c_str(),frame.length());
+    char com[2];
+    shortToBytes(commend,com);
+    bool result1=sendBytes(com,2);
+    bool result;
+    if(ans){
+        shortToBytes(ReadNext2Bytes(frame),com);
+        result=sendBytes(com,2);
+    }
+    else{
+        for(int i=0;i<frame.length();i++){
+            if(frame[i]==' ')frame[i]='\0';
+        }
+       result=sendBytes(frame.c_str(),frame.length());
+    }
     if(!result || !result1) return false;
     return sendBytes(&delimiter,1);
 }
@@ -281,5 +291,32 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
     return false;}
     return true;
 }
+short BGRS_ConnectionHandler:: bytesToShort(char* bytesArr)
+{
+    short result = (short)((bytesArr[0] & 0xff) << 8);
+    result += (short)(bytesArr[1] & 0xff);
+    return result;
+}
+void BGRS_ConnectionHandler:: shortToBytes(short num, char* bytesArr)
+{
+    bytesArr[0] = ((num >> 8) & 0xFF);
+    bytesArr[1] = (num & 0xFF);
+}
+short BGRS_ConnectionHandler:: ReadNext2Bytes(string &line){
+    short commend=0;
+    for(int i=0; i<line.length();i++){
+        if(line[i]==' ') {
+            commend=std::stoi( line.substr(0,i));
+            line=line.substr(i+1);
+            break;
+        }
+    }
+    if(commend==0){
+        commend=std::stoi(line);
+        line="";
+    }
+    return commend;
+}
+
 
 

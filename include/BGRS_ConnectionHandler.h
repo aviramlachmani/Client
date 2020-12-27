@@ -44,7 +44,7 @@ public:
 
     // Send a message to the remote host.
     // Returns false in case connection is closed before all the data is sent.
-    bool sendFrameAscii(short commend,const std::string& frame, char delimiter);
+    bool sendFrameAscii(short commend,std::string& frame, char delimiter,bool ans);
 
     // Close down the connection properly.
     void close();
@@ -58,6 +58,12 @@ public:
     bool makeCourseStat(std::string &basicString, char delimiter);
 
     bool makeMyCourse(std::string &basicString, char delimiter);
+
+    short bytesToShort(char *bytesArr);
+
+    void shortToBytes(short num, char *bytesArr);
+
+    short ReadNext2Bytes(std::string &line);
 };
 
 #endif
