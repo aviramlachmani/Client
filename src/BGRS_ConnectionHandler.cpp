@@ -64,7 +64,7 @@ bool BGRS_ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite) {
 }
 
 bool BGRS_ConnectionHandler::getLine(std::string& line) {
-    return getFrameAscii(line, '\n');
+    return getFrameAscii(line, '/');
 }
 
 bool BGRS_ConnectionHandler::sendLine(std::string& line) {
@@ -81,18 +81,18 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
         commend=line;
         rest="";
     }
-    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'\n', false);
-    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'\n', false);
-    if(commend=="LOGIN") return sendFrameAscii(3,rest,'\n', false);
-    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'\n', false);
-    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'\n',true);
-    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'\n',true);
-    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'\n',true);
-    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'\n', false);
-    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'\n',true);
-    if(commend=="UNREGISTER") return sendFrameAscii(15,rest,'\n',true); ///we cant send 10 because it is '\n' in asci
-    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'\n', false);
-    else  return sendFrameAscii(13,rest,'\n', false);
+    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'/', false);
+    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'/', false);
+    if(commend=="LOGIN") return sendFrameAscii(3,rest,'/', false);
+    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'/', false);
+    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'/',true);
+    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'/',true);
+    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'/',true);
+    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'/', false);
+    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'/',true);
+    if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'/',true);
+    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'/', false);
+    else  return sendFrameAscii(13,rest,'/', false);
 }
 
 bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
@@ -121,8 +121,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
             com[i]=ch;
         }
         short result1=bytesToShort(com);
-        if(result1==15) frame.append("10 ");
-        else frame.append(std::to_string(result1)+" ");
+        frame.append(std::to_string(result1)+" ");
 
         if(result1==6) return makeKedmCheckMassage(frame,delimiter,true);
         if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
@@ -130,7 +129,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         if(result1==9) return makeIsRegistered(frame,delimiter);
         if(result1==11) return makeKedmCheckMassage(frame,delimiter,true);
 
-        if (!getBytes(&ch, 1)) /// read the last baye '\n'
+        if (!getBytes(&ch, 1)) /// read the last byte '/'
         {return false;}
 
     } catch (std::exception& e) {
@@ -222,7 +221,7 @@ bool BGRS_ConnectionHandler::makeStudentStat(string &frame, char delimiter) {
             {
                 return false;
             }
-            if(ch!=' ')frame.append(1, ch);
+            if(ch!='\0')frame.append(1, ch);
             else {
                 frame=frame+"\nCourses: [";
                 return makeKedmCheckMassage(frame,delimiter, false);
@@ -254,14 +253,12 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
             frame.append(1,ch);
         }while (ch!='\0');
         frame=frame+"\nSeats Available: ";
-        for(int i=0;i<2;i++){
         do{
             if (!getBytes(&ch, 1)) {/// read the Current seats that taken of course
                 return false;
             }
             if(ch!=' ') frame.append(1,ch);
         }while (ch!=' ');
-        }
         frame=frame+"/";
         do{
             if (!getBytes(&ch, 1)) {/// read the Max seats of course
