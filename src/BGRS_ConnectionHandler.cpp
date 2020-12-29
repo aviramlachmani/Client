@@ -273,7 +273,7 @@ bool BGRS_ConnectionHandler::makeCourseStat(string &frame, char delimiter) {
                 {
                     return false;
                 }
-                if(ch!=' ')frame.append(1, ch);
+                if(ch!='\0')frame.append(1, ch);
                 else {
                     frame=frame+",";
                     ans=true;
