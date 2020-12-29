@@ -123,11 +123,11 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         short result1=bytesToShort(com);
         frame.append(std::to_string(result1)+" ");
 
-        if(result1==6) return makeKedmCheckMassage(frame,delimiter,true);
-        if(result1==7) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
-        if(result1==8) return makeStudentStat(frame,delimiter);
-        if(result1==9) return makeIsRegistered(frame,delimiter);
-        if(result1==11) return makeKedmCheckMassage(frame,delimiter,true);
+        if(result1==6 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
+        if(result1==7 && result==12) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
+        if(result1==8 && result==12) return makeStudentStat(frame,delimiter);
+        if(result1==9 && result==12) return makeIsRegistered(frame,delimiter);
+        if(result1==11 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
 
         if (!getBytes(&ch, 1)) /// read the last byte '/'
         {return false;}
