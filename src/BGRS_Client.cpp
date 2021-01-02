@@ -98,6 +98,6 @@ int main (int argc, char *argv[]) {
             }
         }
      }
-
+    th1.join();
     return 0;
 }
