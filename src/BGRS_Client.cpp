@@ -10,36 +10,32 @@
 */
 class Task{
 private:
-    int id;
     std::mutex & mutex;
-    int & expectedResponses;
     bool & responseWaiting;
     bool & terminate;
     BGRS_ConnectionHandler & connectionHandler;
 public:
-    Task(int _id,std::mutex & _mutex, int &_expectedResponses,bool &_responseWaiting,bool &_terminate , BGRS_ConnectionHandler & _CH) :
-            id(_id) ,mutex(_mutex), expectedResponses(_expectedResponses),responseWaiting(_responseWaiting), terminate(_terminate), connectionHandler(_CH){}
+    Task(std::mutex & _mutex,bool &_responseWaiting,bool &_terminate , BGRS_ConnectionHandler & _CH) :
+            mutex(_mutex), responseWaiting(_responseWaiting), terminate(_terminate), connectionHandler(_CH){}
 
     void run(){
         while(1){
-            const short bufsize = 1024;
-            char buf[bufsize];
-            while (responseWaiting){
-                std::this_thread::yield(); //gives a chance for the other thread to print ACK and Error messages
-            }
-            { //opening new scope so the lock will get destroyed after
-                if (terminate) break;
-                std::lock_guard<std::mutex> lock(mutex);
-                std::cout<<"Client>" <<std::flush;
-                std::cin.getline(buf, bufsize);
-            }
-            std::string line(buf);
-            if (line.compare( "LOGOUT")==0) terminate = true;
-            int len=line.length();
-            if (!connectionHandler.sendLine(line)) {
-                std::lock_guard<std::mutex> lock(mutex);
-                std::cout << "trying to send...fail..write again the commend\n" << std::endl;
-            }else{expectedResponses++;}
+            if (!responseWaiting){
+                const short bufsize = 1024;
+                char buf[bufsize];
+                { //opening new scope so the lock will get destroyed after
+                    if (terminate) break;
+                    std::lock_guard<std::mutex> lock(mutex);
+                    std::cout<<"Client>" <<std::flush;
+                    std::cin.getline(buf, bufsize);
+                }
+                std::string line(buf);
+                if (line.compare( "LOGOUT")==0) terminate = true;
+                if (!connectionHandler.sendLine(line)) {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    std::cout << "trying to send...fail..write again the commend\n" << std::endl;
+                }else{responseWaiting = true;}
+            }else{std::this_thread::yield();}
         }
     }
 };
@@ -62,39 +58,35 @@ int main (int argc, char *argv[]) {
     std::mutex mutex;
     bool responseWaiting = false;
     bool terminate = false;
-    Task read(1,mutex, expectedResponses, responseWaiting,terminate, connectionHandler);
+    Task read(mutex, responseWaiting,terminate, connectionHandler);
     std::thread th1(&Task::run,&read);
 
     while (1) {
-        if (expectedResponses>0){
+        if (responseWaiting){
             std::string answer="";
             // Get back an answer: by using the expected number of bytes (len bytes + newline delimiter)
             // We could also use: connectionHandler.getline(answer) and then get the answer without the newline char at the end
             if (!connectionHandler.getLine(answer)) {
-                responseWaiting = true;
                 std::lock_guard<std::mutex> lock(mutex);
                 std::cout << "trying to get...fail..write again the commend\n" << std::endl;
                 responseWaiting = false;
             }else{
-                responseWaiting = true;
-                expectedResponses--;
-            }
-
-            int len=answer.length();
-            // A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
-            // we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
-            answer.resize(len-1);
-            {
-                std::lock_guard<std::mutex> lock(mutex);
-                std::cout << "Client<"+answer << std::endl;
-                responseWaiting = false;
-            }
-            if (answer.compare( "ACK 4")==0) {
-                std::lock_guard<std::mutex> lock(mutex);
-                std::cout << "Exiting...\n" << std::endl;
-                responseWaiting = false;
-                terminate = true;
-                break;
+                int len=answer.length();
+                // A C string must end with a 0 char delimiter.  When we filled the answer buffer from the socket
+                // we filled up to the \n char - we must make sure now that a 0 char is also present. So we truncate last character.
+                answer.resize(len-1);
+                {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    std::cout << "Client<"+answer << std::endl;
+                }
+                if (answer.compare( "ACK 4")==0) {
+                    std::lock_guard<std::mutex> lock(mutex);
+                    std::cout << "Exiting...\n" << std::endl;
+                    responseWaiting = false;
+                    terminate = true;
+                    break;
+                }
+                responseWaiting=false;
             }
         }
      }
