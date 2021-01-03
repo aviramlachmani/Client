@@ -124,7 +124,7 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         frame.append(std::to_string(result1)+" ");
 
         if(result1==6 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
-        if(result1==7 && result==12) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
+        if(result1==7 && result==12) return makeCourseStat(frame,delimiter);
         if(result1==8 && result==12) return makeStudentStat(frame,delimiter);
         if(result1==9 && result==12) return makeIsRegistered(frame,delimiter);
         if(result1==11 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
@@ -141,7 +141,6 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
 
 
 bool BGRS_ConnectionHandler::sendFrameAscii(short commend, std::string& frame, char delimiter,bool ans) {
-    string string1=std::to_string(commend);
     char com[2];
     shortToBytes(commend,com);
     bool result1=sendBytes(com,2);
