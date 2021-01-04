@@ -2,10 +2,6 @@
 
 using boost::asio::ip::tcp;
 
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
 using std::string;
 
 BGRS_ConnectionHandler::BGRS_ConnectionHandler(string host, short port): host_(host), port_(port), io_service_(), socket_(io_service_){}
@@ -70,7 +66,7 @@ bool BGRS_ConnectionHandler::getLine(std::string& line) {
 bool BGRS_ConnectionHandler::sendLine(std::string& line) {
     std::string commend;
     std::string rest;
-    for(int i=0; i<line.length();i++){
+    for(unsigned int i=0; i<line.length();i++){
         if(line[i]==' ') {
             commend=line.substr(0,i);
             rest=line.substr(i+1);
@@ -151,7 +147,7 @@ bool BGRS_ConnectionHandler::sendFrameAscii(short commend, std::string& frame, c
         result=sendBytes(com,2);
     }
     else{
-        for(int i=0;i<frame.length();i++){
+        for(unsigned int i=0;i<frame.length();i++){
             if(frame[i]==' ')frame[i]='\0';
         }
        result=sendBytes(frame.c_str(),frame.length());
@@ -301,7 +297,7 @@ void BGRS_ConnectionHandler:: shortToBytes(short num, char* bytesArr)
 }
 short BGRS_ConnectionHandler:: ReadNext2Bytes(string &line){
     short commend=0;
-    for(int i=0; i<line.length();i++){
+    for(unsigned int i=0; i<line.length();i++){
         if(line[i]==' ') {
             commend=std::stoi( line.substr(0,i));
             line=line.substr(i+1);

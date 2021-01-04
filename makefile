@@ -1,16 +1,21 @@
 CFLAGS:=-c -Wall -Weffc++ -g -std=c++11 -Iinclude
 LDFLAGS:=-lboost_system -lpthread
 
-all: BGRS_Client
-	g++ -o bin/BGRS_Client bin/BGRS_ConnectionHandler.o bin/BGRS_Client.o $(LDFLAGS)
+all: BGRSclient
+	g++ -o bin/BGRSclient bin/BGRS_ConnectionHandler.o bin/Task.o bin/BGRSclient.o $(LDFLAGS)
 
-BGRS_Client: bin/BGRS_ConnectionHandler.o bin/BGRS_Client.o
+BGRSclient: bin/BGRS_ConnectionHandler.o bin/Task.o bin/BGRSclient.o
 	
 bin/BGRS_ConnectionHandler.o: src/BGRS_ConnectionHandler.cpp
 	g++ $(CFLAGS) -o bin/BGRS_ConnectionHandler.o src/BGRS_ConnectionHandler.cpp
 
-bin/BGRS_Client.o: src/BGRS_Client.cpp
-	g++ $(CFLAGS) -o bin/BGRS_Client.o src/BGRS_Client.cpp
+bin/Task.o: src/Task.cpp
+	g++ $(CFLAGS) -o bin/Task.o src/Task.cpp
+
+bin/BGRSclient.o: src/BGRSclient.cpp
+	g++ $(CFLAGS) -o bin/BGRSclient.o src/BGRSclient.cpp
+
+
 	
 .PHONY: clean
 clean:

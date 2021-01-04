@@ -1,44 +1,13 @@
 #include <stdlib.h>
 #include <mutex>
 #include <thread>
-//#include "../include/Task.h"
-#include "../include/BGRS_ConnectionHandler.h"
+#include "../include/Task.h"
+
 
 
 /**
 * This code assumes that the server replies the exact text the client sent it (as opposed to the practical session example)
 */
-class Task{
-private:
-    std::mutex & mutex;
-    bool & responseWaiting;
-    bool & terminate;
-    BGRS_ConnectionHandler & connectionHandler;
-public:
-    Task(std::mutex & _mutex,bool &_responseWaiting,bool &_terminate , BGRS_ConnectionHandler & _CH) :
-            mutex(_mutex), responseWaiting(_responseWaiting), terminate(_terminate), connectionHandler(_CH){}
-
-    void run(){
-        while(1){
-            if (!responseWaiting){
-                const short bufsize = 1024;
-                char buf[bufsize];
-                { //opening new scope so the lock will get destroyed after
-                    if (terminate) break;
-                    std::lock_guard<std::mutex> lock(mutex);
-                    std::cout<<"Client>" <<std::flush;
-                    std::cin.getline(buf, bufsize);
-                }
-                std::string line(buf);
-                if (line.compare( "LOGOUT")==0) terminate = true;
-                if (!connectionHandler.sendLine(line)) {
-                    std::lock_guard<std::mutex> lock(mutex);
-                    std::cout << "trying to send...fail..write again the commend\n" << std::endl;
-                }else{responseWaiting = true;}
-            }else{std::this_thread::yield();}
-        }
-    }
-};
 
 
 int main (int argc, char *argv[]) {
@@ -54,7 +23,6 @@ int main (int argc, char *argv[]) {
         std::cerr << "Cannot connect to " << host << ":" << port << std::endl;
         return 1;
     }
-    int expectedResponses = 0;
     std::mutex mutex;
     bool responseWaiting = false;
     bool terminate = false;
