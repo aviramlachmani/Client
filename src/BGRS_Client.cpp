@@ -54,7 +54,6 @@ int main (int argc, char *argv[]) {
         std::cerr << "Cannot connect to " << host << ":" << port << std::endl;
         return 1;
     }
-    int expectedResponses = 0;
     std::mutex mutex;
     bool responseWaiting = false;
     bool terminate = false;
@@ -81,7 +80,7 @@ int main (int argc, char *argv[]) {
                 }
                 if (answer.compare( "ACK 4")==0) {
                     std::lock_guard<std::mutex> lock(mutex);
-                    std::cout << "Exiting...\n" << std::endl;
+                   // std::cout << "Exiting...\n" << std::endl;
                     responseWaiting = false;
                     terminate = true;
                     break;
