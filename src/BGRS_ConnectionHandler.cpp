@@ -11,8 +11,7 @@ BGRS_ConnectionHandler::~BGRS_ConnectionHandler() {
 }
 
 bool BGRS_ConnectionHandler::connect() {
-    std::cout << "Starting connect to "
-              << host_ << ":" << port_ << std::endl;
+    std::cout << "Starting connect to "<< host_ << ":" << port_ << std::endl;
     try {
         tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_), port_); // the server endpoint
         boost::system::error_code error;
@@ -60,7 +59,7 @@ bool BGRS_ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite) {
 }
 
 bool BGRS_ConnectionHandler::getLine(std::string& line) {
-    return getFrameAscii(line, '/');
+    return getFrameAscii(line, '|');
 }
 
 bool BGRS_ConnectionHandler::sendLine(std::string& line) {
@@ -77,18 +76,18 @@ bool BGRS_ConnectionHandler::sendLine(std::string& line) {
         commend=line;
         rest="";
     }
-    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'/', false);
-    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'/', false);
-    if(commend=="LOGIN") return sendFrameAscii(3,rest,'/', false);
-    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'/', false);
-    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'/',true);
-    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'/',true);
-    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'/',true);
-    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'/', false);
-    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'/',true);
-    if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'/',true);
-    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'/', false);
-    else  return sendFrameAscii(13,rest,'/', false);
+    if(commend=="ADMINREG") return sendFrameAscii(1,rest,'|', false);
+    if(commend=="STUDENTREG") return sendFrameAscii(2,rest,'|', false);
+    if(commend=="LOGIN") return sendFrameAscii(3,rest,'|', false);
+    if(commend=="LOGOUT") return sendFrameAscii(4,rest,'|', false);
+    if(commend=="COURSEREG") return sendFrameAscii(5,rest,'|',true);
+    if(commend=="KDAMCHECK") return sendFrameAscii(6,rest,'|',true);
+    if(commend=="COURSESTAT") return sendFrameAscii(7,rest,'|',true);
+    if(commend=="STUDENTSTAT") return sendFrameAscii(8,rest,'|', false);
+    if(commend=="ISREGISTERED") return sendFrameAscii(9,rest,'|',true);
+    if(commend=="UNREGISTER") return sendFrameAscii(10,rest,'|',true);
+    if(commend=="MYCOURSES") return sendFrameAscii(11,rest,'|', false);
+    else  return sendFrameAscii(13,rest,'|', false);
 }
 
 bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
@@ -120,12 +119,12 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
         frame.append(std::to_string(result1)+" ");
 
         if(result1==6 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
-        if(result1==7 && result==12) return makeCourseStat(frame,delimiter);              ///todo there are problem with the answer of the server
+        if(result1==7 && result==12) return makeCourseStat(frame,delimiter);
         if(result1==8 && result==12) return makeStudentStat(frame,delimiter);
         if(result1==9 && result==12) return makeIsRegistered(frame,delimiter);
         if(result1==11 && result==12) return makeKedmCheckMassage(frame,delimiter,true);
 
-        if (!getBytes(&ch, 1)) /// read the last byte '/'
+        if (!getBytes(&ch, 1)) /// read the last byte '|'
         {return false;}
 
     } catch (std::exception& e) {
@@ -137,7 +136,6 @@ bool BGRS_ConnectionHandler::getFrameAscii(std::string& frame, char delimiter) {
 
 
 bool BGRS_ConnectionHandler::sendFrameAscii(short commend, std::string& frame, char delimiter,bool ans) {
-    string string1=std::to_string(commend);
     char com[2];
     shortToBytes(commend,com);
     bool result1=sendBytes(com,2);

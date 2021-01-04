@@ -4,13 +4,17 @@
   <component name="MakefileSettings">
     <option name="linkedExternalProjectsSettings">
       <MakefileProjectSettings>
+        <option name="analyzerType" value="OUTPUT_PARSING" />
+        <option name="buildOptions" value="" />
+        <option name="buildTarget" value="all" />
+        <option name="cleanTarget" value="client" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="modules">
           <set>
-            <option value="C:\Users\david\CLionProjects\Client" />
+            <option value="$PROJECT_DIR$" />
           </set>
         </option>
-        <option name="version" value="2" />
+        <option name="switches" value="--just-print --print-directory --keep-going" />
       </MakefileProjectSettings>
     </option>
   </component>

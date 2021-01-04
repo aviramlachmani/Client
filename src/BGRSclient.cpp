@@ -49,7 +49,7 @@ int main (int argc, char *argv[]) {
                 }
                 if (answer.compare( "ACK 4")==0) {
                     std::lock_guard<std::mutex> lock(mutex);
-                    std::cout << "Exiting...\n" << std::endl;
+                   // std::cout << "Exiting...\n" << std::endl;
                     responseWaiting = false;
                     terminate = true;
                     break;
