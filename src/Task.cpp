@@ -15,7 +15,6 @@ void Task::run(){
             { //opening new scope so the lock will get destroyed after
                 if (terminate) break;
                 std::lock_guard<std::mutex> lock(mutex);
-                std::cout<<"Client>" <<std::flush;
                 std::cin.getline(buf, bufsize);
             }
             std::string line(buf);

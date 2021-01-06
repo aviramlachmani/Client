@@ -45,7 +45,7 @@ int main (int argc, char *argv[]) {
                 answer.resize(len-1);
                 {
                     std::lock_guard<std::mutex> lock(mutex);
-                    std::cout << "Client<"+answer << std::endl;
+                    std::cout << answer << std::endl;
                 }
                 if (answer.compare( "ACK 4")==0) {
                     std::lock_guard<std::mutex> lock(mutex);
